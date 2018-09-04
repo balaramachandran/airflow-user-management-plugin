@@ -1,10 +1,11 @@
-__author__ = 'robertsanders'
-
 import airflow
 from airflow.plugins_manager import AirflowPlugin
 from airflow.contrib.auth.backends.password_auth import PasswordUser
 from airflow.settings import Session
 from airflow.models import User
+
+from flask_login import current_user
+from sqlalchemy import func
 
 from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
@@ -40,9 +41,9 @@ class UserManagementModelView(ModelView):
     # page_size = 500
     can_set_page_size = True
 
-    can_create = True
+    can_create = False
     can_edit = True
-    can_delete = True
+    can_delete = False
 
     column_list = ('id', 'username', 'email')
     column_formatters = dict(email=email_formatter)
@@ -60,7 +61,26 @@ class UserManagementModelView(ModelView):
     # form_create_rules = None
     # form_args = dict(
     #     email=dict(validators=[])
-    # )
+    #)
+
+    def get_query(self):
+        username = ''
+        if hasattr(current_user, 'user'):
+           username = current_user.user.username
+        if username == 'admin':
+           return self.session.query(self.model)
+
+        return  self.session.query(self.model).filter(self.model.username==username)
+
+    def get_count_query(self):
+        username = ''
+        if hasattr(current_user, 'user'):
+           username = current_user.user.username
+        if username == 'admin':
+           return self.session.query(func.count('*')).filter(self.model.username!='')
+
+        return  self.session.query(func.count('*')).filter(self.model.username==username)
+
 
     def on_model_change(self, form, model, is_created):
         logging.info("UserManagementModelView.on_model_change(form=" + str(form) + ", model=" + str(model) + ", is_created=" + str(is_created) + ")")
@@ -69,7 +89,7 @@ class UserManagementModelView(ModelView):
     # Overrides the create_model function to create the User object required to create the PasswordUser object
     def create_model(self, form):
         logging.info("UserManagementModelView.create_model(form=" + str(form) + ")")
-        
+
         try:
             user = User() # Added this line to create the user object since its required to create the passworduser object
             model = self.model(user)
@@ -93,7 +113,7 @@ class UserManagementModelView(ModelView):
     def update_model(self, form, model):
         logging.info("UserManagementModelView.update_model(form=" + str(form) + ", model=" + str(model) + ")")
         logging.info("form.password: " + str(form.password))
-        logging.info("form.password_confirm: " + str(form.password_confirm))
+        # logging.info("form.password_confirm: " + str(form.password_confirm))
         return super(UserManagementModelView, self).update_model(form, model)
 
     def delete_model(self, model):
