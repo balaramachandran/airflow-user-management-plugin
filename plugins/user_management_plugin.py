@@ -70,14 +70,14 @@ class UserManagementModelView(ModelView):
         if current_user.user.username == 'admin':
            return self.session.query(self.model)
 
-        return  self.session.query(self.model).filter(self.model.username==username)
+        return  self.session.query(self.model).filter(self.model.username==current_user.user.username)
 
     # Added the override for get_count_query so that the admin can see the count of all users while other's can see only one row displayed.
     def get_count_query(self):
         if current_user.user.username == 'admin':
            return self.session.query(func.count('*')).filter(self.model.username!='')
 
-        return  self.session.query(func.count('*')).filter(self.model.username==username)
+        return  self.session.query(func.count('*')).filter(self.model.username==current_user.user.username)
 
     def on_model_change(self, form, model, is_created):
 
