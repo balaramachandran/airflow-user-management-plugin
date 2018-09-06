@@ -17,6 +17,7 @@ A plugin to Apache Airflow (Documentation: https://pythonhosted.org/airflow/, So
     * quick way of doing this:
     
         $ cd {AIRFLOW_PLUGINS_FOLDER}
+        
         $ wget https://raw.githubusercontent.com/balaramachandran/airflow-user-management-plugin/master/plugins/user_management_plugin.py
  
 2. Restart the Airflow Services
